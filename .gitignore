@@ -1,0 +1,43 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+.eclipse/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Spring Boot
+*.log
+*.pid
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Node (frontend)
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# Data
+data/
+uploads/
+
+# Temporary
+*.tmp
+*.bak
+*.swp
+*~

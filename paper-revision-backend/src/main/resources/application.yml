@@ -1,0 +1,68 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: paper-revision
+  profiles:
+    active: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/paper_revision
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deletedAt
+      logic-delete-value: now()
+      logic-not-delete-value: "null"
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
+# Knife4j API文档配置
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+# JWT配置
+jwt:
+  secret: paper-revision-jwt-secret-key-2024-please-change-in-production
+  expiration: 86400000  # 24小时
+
+# Milvus向量数据库配置
+milvus:
+  host: localhost
+  port: 19530
+  database: default
+
+# LLM提供商默认配置 (DeepSeek + Doubao)
+llm:
+  providers:
+    deepseek:
+      name: DeepSeek
+      base-url: https://api.deepseek.com
+      default-model: deepseek-chat
+    doubao:
+      name: 豆包(Doubao)
+      base-url: https://ark.cn-beijing.volces.com/api/v3
+      default-model: doubao-pro-32k
+
+# 文件存储配置
+file-storage:
+  type: local
+  local-path: ./data/files

@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/paper_revision
+    username: postgres
+    password: postgres
+
+logging:
+  level:
+    org.xhy: DEBUG
+    org.springframework.web: INFO
