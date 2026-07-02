@@ -12,19 +12,21 @@ import io.milvus.param.dml.InsertParam;
 import io.milvus.param.dml.SearchParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/** Milvus向量存储服务 */
+/** Milvus向量存储服务（仅在milvus.enabled=true时启用） */
 @Service
+@ConditionalOnProperty(name = "milvus.enabled", havingValue = "true", matchIfMissing = false)
 public class MilvusVectorStore {
 
     private static final Logger logger = LoggerFactory.getLogger(MilvusVectorStore.class);
     private static final String COLLECTION_NAME = "paper_chunks";
-    private static final int VECTOR_DIM = 1536; // 默认维度
+    private static final int VECTOR_DIM = 1536;
 
     private final MilvusServiceClient milvusClient;
 
@@ -33,16 +35,13 @@ public class MilvusVectorStore {
         initCollection();
     }
 
-    /** 初始化Collection */
     private void initCollection() {
         HasCollectionParam hasParam = HasCollectionParam.newBuilder()
                 .withCollectionName(COLLECTION_NAME).build();
-
         if (milvusClient.hasCollection(hasParam).getData()) {
             logger.info("Milvus Collection已存在: {}", COLLECTION_NAME);
             return;
         }
-
         FieldType idField = FieldType.newBuilder()
                 .withName("id").withDataType(DataType.Int64).withPrimaryKey(true).withAutoID(true).build();
         FieldType chunkIdField = FieldType.newBuilder()
@@ -61,29 +60,23 @@ public class MilvusVectorStore {
                 .addFieldType(paperIdField).addFieldType(textField)
                 .addFieldType(vectorField)
                 .build();
-
         milvusClient.createCollection(createParam);
         logger.info("Milvus Collection创建成功: {}, 维度: {}", COLLECTION_NAME, VECTOR_DIM);
     }
 
-    /** 插入向量 */
     public void insertVectors(String paperId, List<String> chunkIds, List<String> texts, List<List<Float>> vectors) {
         if (chunkIds.isEmpty()) return;
-
         List<InsertParam.Field> fields = new ArrayList<>();
         fields.add(new InsertParam.Field("chunk_id", chunkIds));
         fields.add(new InsertParam.Field("paper_id", Collections.nCopies(chunkIds.size(), paperId)));
         fields.add(new InsertParam.Field("text", texts));
         fields.add(new InsertParam.Field("embedding", vectors));
-
         InsertParam insertParam = InsertParam.newBuilder()
                 .withCollectionName(COLLECTION_NAME).withFields(fields).build();
-
         milvusClient.insert(insertParam);
         logger.info("向量插入成功: {}条, paperId={}", chunkIds.size(), paperId);
     }
 
-    /** 向量检索 */
     public List<String> search(List<Float> queryVector, int topK) {
         SearchParam searchParam = SearchParam.newBuilder()
                 .withCollectionName(COLLECTION_NAME)
@@ -94,11 +87,8 @@ public class MilvusVectorStore {
                 .withParams("{\"nprobe\":10}")
                 .addOutField("chunk_id").addOutField("text").addOutField("paper_id")
                 .build();
-
         R<SearchResults> results = milvusClient.search(searchParam);
-        // 提取检索到的文本
         List<String> retrievedTexts = new ArrayList<>();
-        // TODO: 解析SearchResults获取实际文本
         logger.info("向量检索完成, topK={}", topK);
         return retrievedTexts;
     }

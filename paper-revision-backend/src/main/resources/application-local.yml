@@ -1,0 +1,30 @@
+# 本地开发配置 - 无需Docker，使用H2内存数据库
+spring:
+  datasource:
+    url: jdbc:h2:file:./data/paper-revision;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  rabbitmq:
+    listener:
+      auto-startup: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+
+# Milvus禁用（本地无Docker时）
+milvus:
+  enabled: false
+
+# 文件存储：本地
+file-storage:
+  type: local
+  local-path: ./data/files
+
+logging:
+  level:
+    org.xhy: DEBUG

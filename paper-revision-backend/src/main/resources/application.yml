@@ -5,7 +5,7 @@ spring:
   application:
     name: paper-revision
   profiles:
-    active: dev
+    active: local
   datasource:
     url: jdbc:postgresql://localhost:5432/paper_revision
     username: postgres

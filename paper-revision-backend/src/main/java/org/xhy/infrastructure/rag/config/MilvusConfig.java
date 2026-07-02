@@ -5,11 +5,13 @@ import io.milvus.param.ConnectParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Milvus向量数据库配置 */
+/** Milvus向量数据库配置（仅在milvus.enabled=true时启用） */
 @Configuration
+@ConditionalOnProperty(name = "milvus.enabled", havingValue = "true", matchIfMissing = false)
 public class MilvusConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(MilvusConfig.class);
@@ -30,9 +32,7 @@ public class MilvusConfig {
                 .withPort(port)
                 .withDatabaseName(database)
                 .build();
-
-        MilvusServiceClient client = new MilvusServiceClient(connectParam);
         logger.info("Milvus客户端初始化成功: {}:{}", host, port);
-        return client;
+        return new MilvusServiceClient(connectParam);
     }
 }

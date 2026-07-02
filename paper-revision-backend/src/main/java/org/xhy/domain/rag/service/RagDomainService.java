@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.xhy.domain.rag.model.DocumentChunkEntity;
 import org.xhy.domain.rag.repository.DocumentChunkRepository;
@@ -22,35 +23,30 @@ public class RagDomainService {
 
     private final DocumentChunkingService chunkingService;
     private final EmbeddingService embeddingService;
-    private final MilvusVectorStore vectorStore;
     private final DocumentChunkRepository chunkRepository;
 
+    @Autowired(required = false)
+    private MilvusVectorStore vectorStore;
+
     public RagDomainService(DocumentChunkingService chunkingService, EmbeddingService embeddingService,
-            MilvusVectorStore vectorStore, DocumentChunkRepository chunkRepository) {
+            DocumentChunkRepository chunkRepository) {
         this.chunkingService = chunkingService;
         this.embeddingService = embeddingService;
-        this.vectorStore = vectorStore;
         this.chunkRepository = chunkRepository;
     }
 
-    /** 文档入库流程: 分块 -> 向量化 -> 存储 */
+    /** 文档入库流程: 分块 -> 存DB -> (可选)向量化存入Milvus */
     public List<DocumentChunkEntity> indexDocument(String paperId, String text) {
         logger.info("开始文档索引: paperId={}, textLength={}", paperId, text.length());
 
-        // 1. 分块
         List<String> chunks = chunkingService.chunk(text);
         if (chunks.isEmpty()) return new ArrayList<>();
 
-        // 2. 向量化
-        List<List<Float>> vectors = embeddingService.embedBatch(chunks);
-
-        // 3. 存储到数据库
         List<DocumentChunkEntity> entities = new ArrayList<>();
         List<String> chunkIds = new ArrayList<>();
         for (int i = 0; i < chunks.size(); i++) {
             String chunkId = UUID.randomUUID().toString();
             chunkIds.add(chunkId);
-
             DocumentChunkEntity entity = new DocumentChunkEntity();
             entity.setPaperId(paperId);
             entity.setChunkIndex(i);
@@ -60,16 +56,20 @@ public class RagDomainService {
             entities.add(entity);
         }
 
-        // 4. 存储到Milvus
-        if (!vectors.isEmpty()) {
-            vectorStore.insertVectors(paperId, chunkIds, chunks, vectors);
+        // 仅在Milvus可用时存储向量
+        if (vectorStore != null) {
+            List<List<Float>> vectors = embeddingService.embedBatch(chunks);
+            if (!vectors.isEmpty()) {
+                vectorStore.insertVectors(paperId, chunkIds, chunks, vectors);
+            }
+        } else {
+            logger.info("Milvus未启用，跳过向量存储，仅使用数据库检索");
         }
 
         logger.info("文档索引完成: paperId={}, 分块数={}", paperId, chunks.size());
         return entities;
     }
 
-    /** 获取论文的所有分块 */
     public List<DocumentChunkEntity> getPaperChunks(String paperId) {
         LambdaQueryWrapper<DocumentChunkEntity> wrapper = Wrappers.<DocumentChunkEntity>lambdaQuery()
                 .eq(DocumentChunkEntity::getPaperId, paperId)
@@ -77,7 +77,6 @@ public class RagDomainService {
         return chunkRepository.selectList(wrapper);
     }
 
-    /** 删除论文的索引数据 */
     public void deletePaperIndex(String paperId) {
         LambdaQueryWrapper<DocumentChunkEntity> wrapper = Wrappers.<DocumentChunkEntity>lambdaQuery()
                 .eq(DocumentChunkEntity::getPaperId, paperId);
