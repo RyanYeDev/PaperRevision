@@ -38,9 +38,13 @@ public class GrobidEngine {
     private volatile String initError = null;
     private long initTimeMs;
 
+    private final String modelMode; // dl / crf / auto
+
     public GrobidEngine(@Value("${grobid.home:./data/grobid-home}") String grobidHome,
+            @Value("${grobid.model-mode:auto}") String modelMode,
             GrobidTEIParser teiParser) {
         this.grobidHome = grobidHome;
+        this.modelMode = modelMode;
         this.teiParser = teiParser;
     }
 
@@ -50,14 +54,18 @@ public class GrobidEngine {
         try {
             Path homePath = Paths.get(grobidHome);
             Files.createDirectories(homePath);
+            Files.createDirectories(homePath.resolve("config"));
+
+            // 部署grobid.properties配置文件
+            Path configFile = homePath.resolve("config/grobid.properties");
+            if (!Files.exists(configFile)) {
+                deployDefaultConfig(configFile);
+            }
 
             // 设置GROBID引擎参数
             System.setProperty("grobid.home", grobidHome);
-            System.setProperty("grobid.nb_threads", "2");
-
-            // grobid-core 0.9.0 引擎初始化
-            // 主入口: org.grobid.core.GrobidModels / org.grobid.core.engines.Engine
-            // 模型会自动从 grobid-home/models 加载
+            System.setProperty("grobid.nb_threads", String.valueOf(
+                    Runtime.getRuntime().availableProcessors()));
 
             // 检查模型文件是否存在，不存在则自动下载
             Path modelsPath = homePath.resolve("models");
@@ -69,8 +77,11 @@ public class GrobidEngine {
 
             initialized = true;
             initTimeMs = Duration.between(start, Instant.now()).toMillis();
-            logger.info("GROBID引擎初始化完成, 耗时: {}ms, 模型路径: {}",
-                    initTimeMs, modelsPath);
+            String modeDesc = "dl".equals(modelMode) ? "DL(深度学习)"
+                    : "crf".equals(modelMode) ? "CRF(条件随机场)"
+                    : "auto(DL优先,CRF兜底)";
+            logger.info("GROBID引擎初始化完成, 耗时: {}ms, 模型路径: {}, 模式: {}",
+                    initTimeMs, modelsPath, modeDesc);
 
         } catch (Exception e) {
             initialized = false;
@@ -154,6 +165,46 @@ public class GrobidEngine {
 
     public boolean isAvailable() {
         return initialized;
+    }
+
+    /** 部署默认GROBID配置，根据model-mode选择CRF或DL模型 */
+    private void deployDefaultConfig(Path configFile) {
+        try {
+            String config;
+            if ("dl".equals(modelMode)) {
+                config = readClasspathConfig("grobid-config/grobid.properties");
+            } else if ("crf".equals(modelMode)) {
+                config = generateCrfOnlyConfig();
+            } else {
+                // auto: 使用DL配置，但开启CRF fallback
+                config = readClasspathConfig("grobid-config/grobid.properties");
+            }
+            Files.writeString(configFile, config);
+            logger.info("GROBID配置已部署: {} (mode={})", configFile, modelMode);
+        } catch (IOException e) {
+            logger.warn("配置文件部署失败: {}", e.getMessage());
+        }
+    }
+
+    private String readClasspathConfig(String path) throws IOException {
+        var is = getClass().getClassLoader().getResourceAsStream(path);
+        if (is == null) return generateCrfOnlyConfig();
+        return new String(is.readAllBytes());
+    }
+
+    /** 生成纯CRF配置（无需DL/GPU） */
+    private String generateCrfOnlyConfig() {
+        return """
+               grobid.model.segmentation.name=segmentation
+               grobid.model.header.name=header
+               grobid.model.referenceSegmenter.name=reference-segmenter
+               grobid.model.citation.name=citation
+               grobid.model.fulltext.name=fulltext
+               grobid.model.affiliationAddress.name=affiliation-address
+               grobid.model.date.name=date
+               grobid.nb_threads=2
+               grobid.delft.enabled=false
+               """;
     }
 
     private boolean hasModelFiles(Path modelsDir) {

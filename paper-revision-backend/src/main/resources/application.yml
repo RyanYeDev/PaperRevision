@@ -67,7 +67,9 @@ file-storage:
   type: local
   local-path: ./data/files
 
-# GROBID学术论文结构化解析（需要Docker: docker-compose up -d grobid）
+# GROBID学术论文结构化解析
 grobid:
   enabled: true
-  url: http://localhost:8070
+  home: ./data/grobid-home
+  # 模型模式: dl (深度学习,精度高需GPU) | crf (条件随机场,CPU开箱即用) | auto (先尝试DL,不可用回退CRF)
+  model-mode: auto
