@@ -156,6 +156,13 @@
             <artifactId>fastjson</artifactId>
             <version>${fastjson.version}</version>
         </dependency>
+        <!-- GROBID Core - 学术论文结构化解析引擎（布局感知，本地jar） -->
+        <dependency>
+            <groupId>org.grobid</groupId>
+            <artifactId>grobid-core</artifactId>
+            <version>0.9.0</version>
+        </dependency>
+
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-crypto</artifactId>
