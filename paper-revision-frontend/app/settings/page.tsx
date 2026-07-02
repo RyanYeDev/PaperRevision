@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<"providers" | "agents" | "grobid">("providers");
@@ -138,14 +139,19 @@ function AgentSettings() {
 }
 
 function GrobidSettings() {
+  const { token } = useAuth();
   const [status, setStatus] = useState<{ installed: boolean; message: string; downloadUrl: string; downloadSize: string } | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+
   useEffect(() => {
-    fetch("http://localhost:8088/api/grobid/status")
+    if (!token) return;
+    fetch("http://localhost:8088/api/grobid/status", { headers })
       .then(r => r.json())
-      .then(d => setStatus(d.data));
-  }, []);
+      .then(d => setStatus(d.data))
+      .catch(() => {});
+  }, [token]);
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
