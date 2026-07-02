@@ -2,20 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* 顶会体 - 中国学术圈最火的可爱字体 */
+@font-face {
+  font-family: 'DingHuiTi';
+  src: url('https://cdn.jsdelivr.net/gh/Anthonyyu114/dinghuiti@main/font/DingHuiTi-Regular.woff2') format('woff2');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'DingHuiTi';
+  src: url('https://cdn.jsdelivr.net/gh/Anthonyyu114/dinghuiti@main/font/DingHuiTi-Bold.woff2') format('woff2');
+  font-weight: bold; font-style: normal; font-display: swap;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --primary: #8bb8d0;
+  --accent: #f2c94c;
+  --success: #7bc89c;
+  --danger: #e8a0a0;
+  --text: #4a5568;
+  --text-light: #94a3b8;
+  --card: #ffffff;
+  --border: #e8e0d5;
 }
+
+* { font-family: 'DingHuiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(160deg, #f5f0eb 0%, #ecf5fa 25%, #f0ebe8 55%, #f7f3ed 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* 卡通卡片 */
+.paper-card {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(120,100,80,0.07);
+  transition: .2s;
+}
+.paper-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(120,100,80,0.11); }
+
+/* 卡通按钮动画 */
+.btn-cartoon { transition: .15s; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.btn-cartoon:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+.btn-cartoon:active { transform: translateY(0); }
+
+/* 导航栏毛玻璃 */
+.nav-cartoon {
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(12px);
+  border-bottom: 1.5px solid var(--border);
 }
