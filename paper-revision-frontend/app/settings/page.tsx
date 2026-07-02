@@ -32,48 +32,73 @@ export default function SettingsPage() {
 }
 
 function ProviderSettings() {
-  const [name, setName] = useState("");
-  const [baseUrl, setBaseUrl] = useState("");
+  const PRESETS: Record<string, { name: string; baseUrl: string; model: string; desc: string }> = {
+    DEEPSEEK: { name: "DeepSeek", baseUrl: "https://api.deepseek.com", model: "deepseek-chat", desc: "DeepSeek深度求索" },
+    DOUBAO: { name: "豆包(Doubao)", baseUrl: "https://ark.cn-beijing.volces.com/api/v3", model: "doubao-pro-32k", desc: "字节跳动豆包大模型" },
+    OPENAI: { name: "OpenAI", baseUrl: "https://api.openai.com", model: "gpt-4o", desc: "OpenAI GPT系列" },
+    CUSTOM: { name: "", baseUrl: "", model: "", desc: "自定义兼容OpenAI接口的模型" },
+  };
+  const [providerType, setProviderType] = useState("DEEPSEEK");
+  const [name, setName] = useState(PRESETS.DEEPSEEK.name);
+  const [baseUrl, setBaseUrl] = useState(PRESETS.DEEPSEEK.baseUrl);
+  const [model, setModel] = useState(PRESETS.DEEPSEEK.model);
   const [apiKey, setApiKey] = useState("");
-  const [providerType, setProviderType] = useState("CUSTOM");
+  const [testResult, setTestResult] = useState<string | null>(null);
+
+  function selectProvider(type: string) {
+    setProviderType(type);
+    setName(PRESETS[type].name);
+    setBaseUrl(PRESETS[type].baseUrl);
+    setModel(PRESETS[type].model);
+    setTestResult(null);
+  }
 
   async function handleCreate() {
-    await api.llm.create({ name, providerType, baseUrl, apiKey });
+    await api.llm.create({ name, providerType, baseUrl, apiKey, defaultModel: model });
     alert("提供商创建成功");
   }
 
   return (
-    <div className="p-6 bg-white rounded-lg border max-w-lg">
-      <h3 className="font-semibold mb-4">添加LLM提供商</h3>
-      <div className="space-y-3">
+    <div className="space-y-4 max-w-lg">
+      {/* Preset cards */}
+      <div className="grid grid-cols-2 gap-3">
+        {Object.entries(PRESETS).filter(([k]) => k !== "CUSTOM").map(([key, preset]) => (
+          <button key={key} onClick={() => selectProvider(key)}
+            className="paper-card p-4 text-left transition-all"
+            style={{ borderColor: providerType === key ? 'var(--primary)' : 'var(--border)', borderWidth: providerType === key ? '2px' : '1.5px' }}>
+            <div className="text-lg font-bold">{preset.name}</div>
+            <div className="text-xs mt-1" style={{ color: 'var(--text-light)' }}>{preset.desc}</div>
+            <div className="text-xs mt-1" style={{ color: 'var(--text-light)' }}>{preset.model}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Config form */}
+      <div className="paper-card p-5 space-y-3">
+        <h3 className="font-bold text-lg" style={{ color: 'var(--primary)' }}>{providerType === "CUSTOM" ? "自定义配置" : `配置 ${name}`}</h3>
         <div>
-          <label className="block text-sm mb-1">提供商类型</label>
-          <select value={providerType} onChange={(e) => setProviderType(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-sm">
-            <option value="DEEPSEEK">DeepSeek</option>
-            <option value="DOUBAO">豆包 (Doubao)</option>
-            <option value="OPENAI">OpenAI</option>
-            <option value="CUSTOM">自定义</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm mb-1">名称</label>
-          <input value={name} onChange={(e) => setName(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-sm" placeholder="DeepSeek / 豆包" />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">API Base URL</label>
+          <label className="block text-sm font-medium mb-1">API Base URL</label>
           <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-sm" placeholder="https://api.deepseek.com" />
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2" style={{ borderColor: 'var(--border)' }} />
         </div>
         <div>
-          <label className="block text-sm mb-1">API Key</label>
-          <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-sm" placeholder="sk-..." />
+          <label className="block text-sm font-medium mb-1">模型名称</label>
+          <input value={model} onChange={(e) => setModel(e.target.value)}
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2" style={{ borderColor: 'var(--border)' }} />
         </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">API Key</label>
+          <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)}
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2" style={{ borderColor: 'var(--border)' }} placeholder="sk-..." />
+        </div>
+        {testResult && (
+          <div className={`p-3 rounded-lg text-sm ${testResult.includes("成功") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+            {testResult}
+          </div>
+        )}
         <button onClick={handleCreate}
-          className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-          添加提供商
+          className="w-full py-2.5 text-white rounded-xl font-bold btn-cartoon" style={{ background: 'var(--primary)' }}>
+          保存提供商
         </button>
       </div>
     </div>

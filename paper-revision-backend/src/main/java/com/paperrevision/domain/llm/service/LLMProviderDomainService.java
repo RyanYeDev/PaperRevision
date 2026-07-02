@@ -62,6 +62,13 @@ public class LLMProviderDomainService {
         return existing;
     }
 
+    /** 根据ID获取提供商 */
+    public LLMProviderEntity getProviderById(String providerId) {
+        LLMProviderEntity provider = providerRepository.selectById(providerId);
+        if (provider == null) throw new EntityNotFoundException("LLM提供商", providerId);
+        return provider;
+    }
+
     /** 获取默认启用的提供商 */
     public LLMProviderEntity getDefaultProvider(String userId) {
         LambdaQueryWrapper<LLMProviderEntity> wrapper = Wrappers.<LLMProviderEntity>lambdaQuery()

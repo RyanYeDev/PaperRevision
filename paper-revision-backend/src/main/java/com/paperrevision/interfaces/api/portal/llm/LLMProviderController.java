@@ -4,11 +4,14 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import com.paperrevision.application.llm.dto.LLMProviderDTO;
 import com.paperrevision.application.llm.service.LLMProviderAppService;
+import com.paperrevision.domain.llm.service.LLMProviderDomainService;
 import com.paperrevision.infrastructure.auth.UserContext;
+import com.paperrevision.infrastructure.llm.LLMService;
 import com.paperrevision.interfaces.api.common.Result;
 import com.paperrevision.interfaces.dto.llm.request.LLMProviderRequest;
 
 import java.util.List;
+import java.util.Map;
 
 /** LLM提供商管理控制器 */
 @RestController
@@ -16,9 +19,14 @@ import java.util.List;
 public class LLMProviderController {
 
     private final LLMProviderAppService appService;
+    private final LLMProviderDomainService domainService;
+    private final LLMService llmService;
 
-    public LLMProviderController(LLMProviderAppService appService) {
+    public LLMProviderController(LLMProviderAppService appService,
+            LLMProviderDomainService domainService, LLMService llmService) {
         this.appService = appService;
+        this.domainService = domainService;
+        this.llmService = llmService;
     }
 
     /** 获取当前用户的所有LLM提供商 */
@@ -56,5 +64,14 @@ public class LLMProviderController {
         String userId = UserContext.getCurrentUserId();
         appService.createDefaultProviders(userId);
         return Result.success();
+    }
+
+    /** 测试LLM连接 */
+    @PostMapping("/{providerId}/test")
+    public Result<Map<String, Object>> testConnection(@PathVariable String providerId) {
+        var provider = domainService.getProviderById(providerId);
+        Map<String, Object> result = llmService.testConnection(
+                provider.getBaseUrl(), provider.getApiKey(), provider.getDefaultModel());
+        return Result.success(result);
     }
 }
