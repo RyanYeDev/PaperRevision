@@ -30,6 +30,11 @@ public class Result<T> {
         return new Result<>(200, "操作成功");
     }
 
+    /** 成功响应（仅消息，无数据） */
+    public static <T> Result<T> success(String message) {
+        return new Result<>(200, message, null);
+    }
+
     /** 成功响应（有数据） */
     public static <T> Result<T> success(T data) {
         return new Result<>(200, "操作成功", data);

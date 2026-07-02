@@ -2,6 +2,7 @@ package org.xhy.domain.rag.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.xhy.domain.rag.model.DocumentChunkEntity;
 import org.xhy.infrastructure.rag.service.EmbeddingService;
@@ -16,42 +17,38 @@ public class RetrievalService {
 
     private static final Logger logger = LoggerFactory.getLogger(RetrievalService.class);
 
-    private final MilvusVectorStore vectorStore;
     private final EmbeddingService embeddingService;
     private final RagDomainService ragDomainService;
 
-    public RetrievalService(MilvusVectorStore vectorStore, EmbeddingService embeddingService,
-            RagDomainService ragDomainService) {
-        this.vectorStore = vectorStore;
+    @Autowired(required = false)
+    private MilvusVectorStore vectorStore;
+
+    public RetrievalService(EmbeddingService embeddingService, RagDomainService ragDomainService) {
         this.embeddingService = embeddingService;
         this.ragDomainService = ragDomainService;
     }
 
-    /** 向量检索 - 根据查询文本检索最相关的文档块 */
+    /** 向量检索（Milvus可用时）或关键词检索（fallback） */
     public List<DocumentChunkEntity> vectorSearch(String query, String paperId, int topK) {
-        logger.info("向量检索: query={}, paperId={}, topK={}", query, paperId, topK);
-
-        // 1. 将查询向量化
-        List<Float> queryVector = embeddingService.embed(query);
-
-        // 2. Milvus检索
-        List<String> chunkTexts = vectorStore.search(queryVector, topK);
-
-        // 3. 根据检索结果获取完整的分块信息
-        List<DocumentChunkEntity> allChunks = ragDomainService.getPaperChunks(paperId);
-
-        return allChunks.stream()
-                .filter(chunk -> chunkTexts.contains(chunk.getContent()))
-                .limit(topK)
-                .collect(Collectors.toList());
+        if (vectorStore != null) {
+            logger.info("向量检索: query={}, paperId={}, topK={}", query, paperId, topK);
+            List<Float> queryVector = embeddingService.embed(query);
+            List<String> chunkTexts = vectorStore.search(queryVector, topK);
+            List<DocumentChunkEntity> allChunks = ragDomainService.getPaperChunks(paperId);
+            return allChunks.stream()
+                    .filter(chunk -> chunkTexts.contains(chunk.getContent()))
+                    .limit(topK)
+                    .collect(Collectors.toList());
+        }
+        // Milvus不可用时使用关键词检索作为fallback
+        logger.info("Milvus不可用，使用关键词检索作为fallback");
+        return keywordSearch(query, paperId, topK);
     }
 
-    /** 关键词检索（简单BM25风格的文本匹配） */
+    /** 关键词检索 */
     public List<DocumentChunkEntity> keywordSearch(String query, String paperId, int topK) {
         List<DocumentChunkEntity> chunks = ragDomainService.getPaperChunks(paperId);
-
         String[] keywords = query.toLowerCase().split("\\s+");
-
         return chunks.stream()
                 .sorted((a, b) -> {
                     int scoreA = countKeywordHits(a.getContent().toLowerCase(), keywords);

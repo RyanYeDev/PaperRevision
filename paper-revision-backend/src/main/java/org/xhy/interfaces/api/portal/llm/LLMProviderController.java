@@ -55,6 +55,6 @@ public class LLMProviderController {
     public Result<Void> initDefaultProviders() {
         String userId = UserContext.getCurrentUserId();
         appService.createDefaultProviders(userId);
-        return Result.success("默认提供商初始化成功");
+        return Result.success();
     }
 }

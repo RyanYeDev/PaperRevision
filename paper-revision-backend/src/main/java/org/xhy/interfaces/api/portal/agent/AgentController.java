@@ -45,6 +45,6 @@ public class AgentController {
     @DeleteMapping("/{agentId}")
     public Result<Void> deleteAgent(@PathVariable String agentId) {
         agentDomainService.deleteAgent(agentId);
-        return Result.success("删除成功");
+        return Result.success();
     }
 }

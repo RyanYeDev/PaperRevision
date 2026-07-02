@@ -47,6 +47,6 @@ public class PaperController {
     public Result<Void> deletePaper(@PathVariable String paperId) {
         String userId = UserContext.getCurrentUserId();
         paperAppService.deletePaper(paperId, userId);
-        return Result.success("删除成功");
+        return Result.success();
     }
 }

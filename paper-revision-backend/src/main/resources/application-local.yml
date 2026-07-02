@@ -9,6 +9,10 @@ spring:
     console:
       enabled: true
       path: /h2-console
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/h2-init.sql
   rabbitmq:
     listener:
       auto-startup: false
