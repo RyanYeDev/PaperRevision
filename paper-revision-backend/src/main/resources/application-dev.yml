@@ -6,5 +6,5 @@ spring:
 
 logging:
   level:
-    org.xhy: DEBUG
+    com.paperrevision: DEBUG
     org.springframework.web: INFO

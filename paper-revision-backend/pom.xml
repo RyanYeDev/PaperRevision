@@ -11,7 +11,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>org.xhy</groupId>
+    <groupId>com.paperrevision</groupId>
     <artifactId>paper-revision</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>PaperRevision</name>
@@ -156,12 +156,8 @@
             <artifactId>fastjson</artifactId>
             <version>${fastjson.version}</version>
         </dependency>
-        <!-- GROBID Core - 学术论文结构化解析引擎（布局感知，本地jar） -->
-        <dependency>
-            <groupId>org.grobid</groupId>
-            <artifactId>grobid-core</artifactId>
-            <version>0.9.0</version>
-        </dependency>
+        <!-- GROBID Core: 本地jar在 lib/grobid-core-0.9.0.jar -->
+        <!-- 通过反射加载，无编译期依赖，CI环境自动跳过 -->
 
         <dependency>
             <groupId>cn.hutool</groupId>
@@ -218,7 +214,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>3.2.3</version>
                 <configuration>
-                    <mainClass>org.xhy.PaperRevisionApplication</mainClass>
+                    <mainClass>com.paperrevision.PaperRevisionApplication</mainClass>
                     <layout>JAR</layout>
                 </configuration>
                 <executions>

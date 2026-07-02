@@ -35,4 +35,4 @@ file-storage:
 
 logging:
   level:
-    org.xhy: DEBUG
+    com.paperrevision: DEBUG

@@ -36,6 +36,9 @@ out/
 data/
 uploads/
 
+# Local libs (grobid-core etc.)
+paper-revision-backend/lib/
+
 # Temporary
 *.tmp
 *.bak
