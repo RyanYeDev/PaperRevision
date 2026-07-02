@@ -25,18 +25,18 @@ public class PdfParserService {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfParserService.class);
 
-    @Autowired(required = false)
+    @Autowired
     private GrobidClient grobidClient;
 
-    @Autowired(required = false)
+    @Autowired
     private GrobidTEIParser teiParser;
 
     /** 解析PDF文件 */
     public PdfParseResult parsePdf(String filePath) {
         File file = new File(filePath);
 
-        // 策略1: GROBID (学术论文最佳)
-        if (grobidClient != null && grobidClient.isAvailable()) {
+        // 策略1: GROBID (检测到本地有GROBID服务时自动使用)
+        if (grobidClient.isAvailable()) {
             try {
                 logger.info("使用GROBID解析论文: {}", filePath);
                 String teiXml = grobidClient.processFulltext(file);
