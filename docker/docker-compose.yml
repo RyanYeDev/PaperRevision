@@ -82,6 +82,20 @@ services:
       timeout: 5s
       retries: 5
 
+  # GROBID - 学术论文结构化解析
+  grobid:
+    image: lfoppiano/grobid:0.8.1
+    container_name: paper-revision-grobid
+    ports:
+      - "8070:8070"
+    environment:
+      JAVA_OPTS: "-Xmx4g"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8070/api/isalive"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+
 volumes:
   postgres_data:
   milvus_data:

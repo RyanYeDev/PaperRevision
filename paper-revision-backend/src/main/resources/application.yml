@@ -66,3 +66,8 @@ llm:
 file-storage:
   type: local
   local-path: ./data/files
+
+# GROBID学术论文结构化解析（需要Docker: docker-compose up -d grobid）
+grobid:
+  enabled: true
+  url: http://localhost:8070
