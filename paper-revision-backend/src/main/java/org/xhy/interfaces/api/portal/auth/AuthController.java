@@ -1,8 +1,8 @@
 package org.xhy.interfaces.api.portal.auth;
 
 import org.springframework.validation.annotation.Validated;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
-import org.xhy.application.user.assembler.UserAssembler;
 import org.xhy.application.user.dto.UserDTO;
 import org.xhy.application.user.service.UserAppService;
 import org.xhy.infrastructure.auth.UserContext;
@@ -42,9 +42,21 @@ public class AuthController {
 
     /** 获取当前用户信息 */
     @GetMapping("/me")
-    public Result<UserDTO> getCurrentUser() {
-        String userId = UserContext.getCurrentUserId();
+    public Result<UserDTO> getCurrentUser(HttpServletRequest request) {
+        String token = extractToken(request);
+        if (token == null || !jwtUtils.validateToken(token)) {
+            return Result.unauthorized("未登录或Token已过期");
+        }
+        String userId = jwtUtils.getUserIdFromToken(token);
         UserDTO user = userAppService.getCurrentUser(userId);
         return Result.success(user);
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String bearer = request.getHeader("Authorization");
+        if (bearer != null && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
+        }
+        return null;
     }
 }
