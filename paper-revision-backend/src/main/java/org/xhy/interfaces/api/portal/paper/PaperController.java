@@ -49,4 +49,17 @@ public class PaperController {
         paperAppService.deletePaper(paperId, userId);
         return Result.success();
     }
+
+    /** 查询论文处理进度 */
+    @GetMapping("/{paperId}/progress")
+    public Result<java.util.Map<String, Object>> getProgress(@PathVariable String paperId) {
+        return Result.success(paperAppService.getProgress(paperId));
+    }
+
+    /** 重试处理失败的论文 */
+    @PostMapping("/{paperId}/retry")
+    public Result<Void> retryProcessing(@PathVariable String paperId) {
+        paperAppService.retryProcessing(paperId);
+        return Result.success("已重新开始处理");
+    }
 }

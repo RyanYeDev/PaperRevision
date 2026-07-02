@@ -14,6 +14,7 @@ import org.xhy.infrastructure.storage.FileStorageService;
 import org.xhy.infrastructure.storage.PdfParserService;
 
 import java.util.List;
+import java.util.Map;
 
 /** 论文应用服务 */
 @Service
@@ -23,17 +24,22 @@ public class PaperAppService {
 
     private final PaperDomainService paperDomainService;
     private final FileStorageService fileStorageService;
-    private final PdfParserService pdfParserService;
+    private final PaperProcessingService processingService;
 
     public PaperAppService(PaperDomainService paperDomainService,
-            FileStorageService fileStorageService, PdfParserService pdfParserService) {
+            FileStorageService fileStorageService, PaperProcessingService processingService) {
         this.paperDomainService = paperDomainService;
         this.fileStorageService = fileStorageService;
-        this.pdfParserService = pdfParserService;
+        this.processingService = processingService;
     }
 
-    /** 上传论文PDF */
+    /** 上传论文PDF（存储后异步处理） */
     public PaperDTO uploadPaper(MultipartFile file, String userId) {
+        // 文件大小限制
+        if (file.getSize() > 100 * 1024 * 1024) {
+            throw new RuntimeException("文件过大，请上传小于100MB的PDF");
+        }
+
         // 存储文件
         String filePath = fileStorageService.storeFile(file, userId);
 
@@ -48,19 +54,22 @@ public class PaperAppService {
 
         PaperEntity created = paperDomainService.createPaper(paper);
 
-        // 异步解析PDF
-        try {
-            PdfParserService.PdfParseResult result = pdfParserService.parsePdf(filePath);
-            paperDomainService.updateParsingResult(created.getId(), result.getText(), result.getPageCount());
-            created.setParsedText(result.getText());
-            created.setPageCount(result.getPageCount());
-            created.setStatus(PaperStatus.PARSED.name());
-        } catch (Exception e) {
-            logger.error("PDF解析失败: {}", created.getId(), e);
-            paperDomainService.updateStatus(created.getId(), PaperStatus.FAILED);
-        }
+        // 启动异步处理（PDF解析 + RAG索引）
+        // 如果中途崩溃，重启后可通过 retry 端点续传
+        processingService.processPaperAsync(created.getId(), filePath);
 
+        logger.info("论文上传成功，后台处理中: {}", created.getId());
         return PaperAssembler.toDTO(created);
+    }
+
+    /** 重试处理失败的论文 */
+    public void retryProcessing(String paperId) {
+        processingService.retryProcessing(paperId);
+    }
+
+    /** 获取论文处理进度 */
+    public Map<String, Object> getProgress(String paperId) {
+        return processingService.getProgress(paperId);
     }
 
     /** 获取用户论文列表 */
