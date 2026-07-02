@@ -67,12 +67,16 @@ public class GrobidEngine {
             System.setProperty("grobid.nb_threads", String.valueOf(
                     Runtime.getRuntime().availableProcessors()));
 
-            // 检查模型文件是否存在，不存在则自动下载
+            // 检查模型文件是否存在
             Path modelsPath = homePath.resolve("models");
             if (!Files.exists(modelsPath) || !hasModelFiles(modelsPath)) {
-                logger.warn("GROBID模型不存在: {}，开始自动下载（约1.2GB，仅需一次）...", modelsPath);
-                Files.createDirectories(modelsPath);
-                GrobidModelDownloader.download(homePath);
+                logger.warn("GROBID模型不存在: {}", modelsPath.toAbsolutePath());
+                logger.warn("请手动下载模型（约1.2GB）并解压到此目录:");
+                logger.warn("  1. 下载: https://grobid.s3.amazonaws.com/grobid-0.9.0-models.zip");
+                logger.warn("  2. 解压到: {}", modelsPath.toAbsolutePath());
+                logger.warn("  3. 重启项目");
+                logger.warn("当前将使用 PDFBox 坐标分析作为替代方案");
+                throw new IOException("GROBID模型未安装，使用PDFBox降级");
             }
 
             initialized = true;
@@ -165,6 +169,13 @@ public class GrobidEngine {
 
     public boolean isAvailable() {
         return initialized;
+    }
+
+    /** 重新初始化引擎（模型上传后调用） */
+    public synchronized void reinit() {
+        initialized = false;
+        initError = null;
+        init();
     }
 
     /** 部署默认GROBID配置，根据model-mode选择CRF或DL模型 */

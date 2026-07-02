@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<"providers" | "agents">("providers");
+  const [activeTab, setActiveTab] = useState<"providers" | "agents" | "grobid">("providers");
 
   return (
     <div>
@@ -14,6 +14,7 @@ export default function SettingsPage() {
         {[
           { key: "providers" as const, label: "LLM提供商" },
           { key: "agents" as const, label: "Agent配置" },
+          { key: "grobid" as const, label: "GROBID模型" },
         ].map((tab) => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 rounded-lg text-sm font-medium ${
@@ -25,6 +26,7 @@ export default function SettingsPage() {
 
       {activeTab === "providers" && <ProviderSettings />}
       {activeTab === "agents" && <AgentSettings />}
+      {activeTab === "grobid" && <GrobidSettings />}
     </div>
   );
 }
@@ -106,6 +108,101 @@ function AgentSettings() {
           创建Agent
         </button>
       </div>
+    </div>
+  );
+}
+
+function GrobidSettings() {
+  const [status, setStatus] = useState<{ installed: boolean; message: string; downloadUrl: string; downloadSize: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    fetch("http://localhost:8088/api/grobid/status")
+      .then(r => r.json())
+      .then(d => setStatus(d.data));
+  }, []);
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      await fetch("http://localhost:8088/api/grobid/models/upload", { method: "POST", body: formData });
+      const r = await fetch("http://localhost:8088/api/grobid/status");
+      const d = await r.json();
+      setStatus(d.data);
+      alert("模型安装成功！");
+    } catch (err) {
+      alert("安装失败: " + err);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="p-6 bg-white rounded-lg border max-w-lg space-y-4">
+      <h3 className="font-semibold text-lg">GROBID 模型管理</h3>
+
+      {/* 状态 */}
+      <div className={`p-4 rounded-lg ${status?.installed ? "bg-green-50 border border-green-200" : "bg-yellow-50 border border-yellow-200"}`}>
+        <div className="flex items-center gap-2 mb-2">
+          <span className={`w-3 h-3 rounded-full ${status?.installed ? "bg-green-500" : "bg-yellow-500"}`} />
+          <span className="font-medium text-sm">{status?.installed ? "模型已安装" : "模型未安装"}</span>
+        </div>
+        <p className="text-xs text-gray-600">{status?.message}</p>
+      </div>
+
+      {/* 安装方式 */}
+      {!status?.installed && (
+        <div className="space-y-3">
+          <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-sm font-medium text-blue-800 mb-2">方式1: 上传模型包（推荐）</p>
+            <p className="text-xs text-blue-600 mb-3">
+              下载模型压缩包（{status?.downloadSize || "约1.2GB"}），然后在此上传
+            </p>
+            <a href={status?.downloadUrl || "#"} target="_blank"
+              className="text-xs text-blue-600 underline hover:text-blue-800 mb-3 block">
+              点击下载模型包 →
+            </a>
+            <label className="inline-block px-4 py-2 bg-blue-600 text-white text-sm rounded-lg cursor-pointer hover:bg-blue-700">
+              {uploading ? "安装中..." : "上传模型zip"}
+              <input type="file" accept=".zip" onChange={handleUpload} className="hidden" disabled={uploading} />
+            </label>
+          </div>
+
+          <div className="p-3 bg-gray-50 rounded-lg border">
+            <p className="text-sm font-medium text-gray-700 mb-1">方式2: 手动安装</p>
+            <p className="text-xs text-gray-500">
+              下载模型包后，解压到项目目录:<br/>
+              <code className="bg-gray-200 px-1 rounded text-xs">
+                paper-revision-backend/data/grobid-home/models/
+              </code>
+            </p>
+          </div>
+
+          <div className="p-3 bg-gray-50 rounded-lg border">
+            <p className="text-sm font-medium text-gray-700 mb-1">💡 没有模型也能用</p>
+            <p className="text-xs text-gray-500">
+              GROBID模型未安装时会自动使用 PDFBox 坐标分析引擎，
+              支持单双栏检测、标题识别、表格提取、公式标注，不影响正常使用。
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 已安装：卸载按钮 */}
+      {status?.installed && (
+        <button onClick={async () => {
+          await fetch("http://localhost:8088/api/grobid/models", { method: "DELETE" });
+          const r = await fetch("http://localhost:8088/api/grobid/status");
+          setStatus((await r.json()).data);
+        }}
+          className="px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">
+          卸载模型
+        </button>
+      )}
     </div>
   );
 }
