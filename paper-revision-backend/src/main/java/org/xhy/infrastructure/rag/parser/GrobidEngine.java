@@ -58,12 +58,12 @@ public class GrobidEngine {
             // 主入口: org.grobid.core.GrobidModels / org.grobid.core.engines.Engine
             // 模型会自动从 grobid-home/models 加载
 
-            // 检查模型文件是否存在
+            // 检查模型文件是否存在，不存在则自动下载
             Path modelsPath = homePath.resolve("models");
-            if (!Files.exists(modelsPath)) {
-                logger.warn("GROBID模型目录不存在: {}，将自动创建并下载模型", modelsPath);
+            if (!Files.exists(modelsPath) || !hasModelFiles(modelsPath)) {
+                logger.warn("GROBID模型不存在: {}，开始自动下载（约1.2GB，仅需一次）...", modelsPath);
                 Files.createDirectories(modelsPath);
-                // 模型会在首次使用时自动下载（grobid-core内置下载逻辑）
+                GrobidModelDownloader.download(homePath);
             }
 
             initialized = true;
@@ -153,6 +153,16 @@ public class GrobidEngine {
 
     public boolean isAvailable() {
         return initialized;
+    }
+
+    private boolean hasModelFiles(Path modelsDir) {
+        try (var stream = Files.list(modelsDir)) {
+            return stream.anyMatch(p -> {
+                String name = p.getFileName().toString();
+                return name.startsWith("header") || name.startsWith("fulltext")
+                        || name.startsWith("segment") || name.startsWith("date");
+            });
+        } catch (IOException e) { return false; }
     }
 
     public String getStatus() {
