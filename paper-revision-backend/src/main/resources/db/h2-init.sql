@@ -45,5 +45,57 @@ CREATE TABLE IF NOT EXISTS agent_execution_traces (
     user_id VARCHAR(64) NOT NULL, phase VARCHAR(50), step_type VARCHAR(50),
     input_data TEXT, output_data TEXT, model_calls INTEGER DEFAULT 0,
     tool_calls INTEGER DEFAULT 0, tokens_used INTEGER DEFAULT 0,
-    duration_ms BIGINT, status VARCHAR(20), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    duration_ms BIGINT, status VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS evaluations (
+    id VARCHAR(64) PRIMARY KEY, revision_result_id VARCHAR(64) NOT NULL,
+    relevance_score DOUBLE, faithfulness_score DOUBLE,
+    completeness_score DOUBLE, format_score DOUBLE,
+    overall_score DOUBLE, feedback TEXT, evaluator_type VARCHAR(50),
+    user_id VARCHAR(64) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS agent_test_cases (
+    id VARCHAR(64) PRIMARY KEY, name VARCHAR(200) NOT NULL,
+    description TEXT, input_data TEXT NOT NULL, expected_output TEXT,
+    ground_truth TEXT, metadata_json TEXT, source_dataset VARCHAR(100),
+    difficulty VARCHAR(20), user_id VARCHAR(64) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, deleted_at TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS agent_test_suites (
+    id VARCHAR(64) PRIMARY KEY, name VARCHAR(200) NOT NULL,
+    description TEXT, config_json TEXT, status VARCHAR(20) DEFAULT 'DRAFT',
+    user_id VARCHAR(64) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, deleted_at TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS agent_test_suite_cases (
+    id VARCHAR(64) PRIMARY KEY, suite_id VARCHAR(64) NOT NULL,
+    case_id VARCHAR(64) NOT NULL, sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, deleted_at TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS agent_eval_reports (
+    id VARCHAR(64) PRIMARY KEY, suite_id VARCHAR(64), agent_id VARCHAR(64),
+    name VARCHAR(200), status VARCHAR(20), overall_score DOUBLE,
+    trajectory_score DOUBLE, llm_judge_score DOUBLE,
+    total_cases INTEGER, completed_cases INTEGER, passed_cases INTEGER,
+    summary TEXT, config_json TEXT, user_id VARCHAR(64) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, deleted_at TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS agent_eval_report_items (
+    id VARCHAR(64) PRIMARY KEY, report_id VARCHAR(64) NOT NULL,
+    case_id VARCHAR(64) NOT NULL, overall_score DOUBLE,
+    trajectory_score DOUBLE, llm_score DOUBLE, passed BOOLEAN,
+    feedback TEXT, trace_id VARCHAR(64), duration_ms BIGINT,
+    tokens_used INTEGER, details_json TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, deleted_at TIMESTAMP
 );

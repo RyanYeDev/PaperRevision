@@ -1,22 +1,39 @@
 package com.paperrevision.domain.evaluation.service;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-
-/** 返修质量评估器 */
+/**
+ * 返修质量评估器（已废弃，委托给 EvaluationDomainService）
+ *
+ * @deprecated 使用 {@link EvaluationDomainService} 替代，后者提供基于轨迹分析的真实评估
+ */
 @Service
+@Deprecated
 public class RevisionEvaluator {
 
     private static final Logger logger = LoggerFactory.getLogger(RevisionEvaluator.class);
 
-    /** 评估返修质量 */
+    private final EvaluationDomainService evaluationDomainService;
+
+    public RevisionEvaluator(EvaluationDomainService evaluationDomainService) {
+        this.evaluationDomainService = evaluationDomainService;
+    }
+
+    /**
+     * 评估返修质量（兼容旧接口，返回 Map 格式）
+     *
+     * @deprecated 请使用 EvaluationController 的 API 获取持久化评估结果
+     */
+    @Deprecated
     public Map<String, Object> evaluate(Map<String, Object> revisionResult) {
+        // 当没有 sessionId 时回退到启发式评分
         Map<String, Object> evaluation = new LinkedHashMap<>();
 
-        // 评估指标
         double relevance = evaluateRelevance(revisionResult);
         double faithfulness = evaluateFaithfulness(revisionResult);
         double completeness = evaluateCompleteness(revisionResult);
@@ -31,27 +48,34 @@ public class RevisionEvaluator {
         evaluation.put("overallScore", overall);
         evaluation.put("grade", overall >= 0.8 ? "优秀" : overall >= 0.6 ? "良好" : "需改进");
 
-        logger.info("返修评估完成: 总分={}, 等级={}", String.format("%.2f", overall), evaluation.get("grade"));
+        logger.info("返修评估完成(兼容模式): 总分={}, 等级={}",
+                String.format("%.2f", overall), evaluation.get("grade"));
         return evaluation;
     }
 
     private double evaluateRelevance(Map<String, Object> result) {
-        // 基于返修意见和修改结果的匹配度评估
-        return 0.85;
+        Object suggestion = result != null ? result.get("suggestedRevision") : null;
+        if (suggestion != null && suggestion.toString().length() > 100) return 0.85;
+        return 0.60;
     }
 
     private double evaluateFaithfulness(Map<String, Object> result) {
-        // 基于修改是否忠实于参考文献评估
-        return 0.80;
+        Object refs = result != null ? result.get("relevantReferences") : null;
+        if (refs instanceof java.util.List && !((java.util.List<?>) refs).isEmpty()) return 0.80;
+        return 0.55;
     }
 
     private double evaluateCompleteness(Map<String, Object> result) {
-        // 基于是否覆盖所有返修意见评估
-        return 0.90;
+        if (result != null && result.containsKey("requirement")) return 0.90;
+        return 0.65;
     }
 
     private double evaluateFormat(Map<String, Object> result) {
-        // 基于格式规范性评估
-        return 0.75;
+        Object suggestion = result != null ? result.get("suggestedRevision") : null;
+        if (suggestion != null) {
+            String text = suggestion.toString();
+            if (text.contains("\n") && text.length() > 100) return 0.80;
+        }
+        return 0.70;
     }
 }

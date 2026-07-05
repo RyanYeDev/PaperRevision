@@ -28,6 +28,7 @@ function NavBar() {
             <>
               <a href="/papers" style={{ color: 'var(--text)' }} className="hover:opacity-70">&#x1F4C4; 论文</a>
               <a href="/revision" style={{ color: 'var(--text)' }} className="hover:opacity-70">&#x2728; 返修</a>
+              <a href="/evaluation" style={{ color: 'var(--text)' }} className="hover:opacity-70">&#x1F4CA; 评估</a>
               <a href="/settings" style={{ color: 'var(--text)' }} className="hover:opacity-70">&#x2699; 设置</a>
               <span style={{ color: 'var(--text-light)' }}>{user.nickname}</span>
               <button onClick={logout} style={{ color: 'var(--danger)' }} className="hover:opacity-70">退出</button>

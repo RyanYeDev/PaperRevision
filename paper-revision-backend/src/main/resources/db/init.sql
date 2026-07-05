@@ -118,7 +118,9 @@ CREATE TABLE IF NOT EXISTS agent_execution_traces (
     tokens_used INTEGER DEFAULT 0,
     duration_ms BIGINT,
     status VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
 );
 
 -- 返修结果表
@@ -150,7 +152,9 @@ CREATE TABLE IF NOT EXISTS evaluations (
     feedback TEXT,
     evaluator_type VARCHAR(50),
     user_id VARCHAR(64) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
 );
 
 -- 索引
@@ -162,3 +166,84 @@ CREATE INDEX IF NOT EXISTS idx_revision_requirements_paper_id ON revision_requir
 CREATE INDEX IF NOT EXISTS idx_revision_results_paper_id ON revision_results(paper_id);
 CREATE INDEX IF NOT EXISTS idx_agent_execution_traces_session_id ON agent_execution_traces(session_id);
 CREATE INDEX IF NOT EXISTS idx_document_chunks_paper_id ON document_chunks(paper_id);
+
+-- 测试用例表
+CREATE TABLE IF NOT EXISTS agent_test_cases (
+    id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    input_data TEXT NOT NULL,
+    expected_output TEXT,
+    ground_truth TEXT,
+    metadata_json TEXT,
+    source_dataset VARCHAR(100),
+    difficulty VARCHAR(20),
+    user_id VARCHAR(64) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
+);
+
+-- 测试套件表
+CREATE TABLE IF NOT EXISTS agent_test_suites (
+    id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    config_json TEXT,
+    status VARCHAR(20) DEFAULT 'DRAFT',
+    user_id VARCHAR(64) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
+);
+
+-- 测试套件-用例关联表
+CREATE TABLE IF NOT EXISTS agent_test_suite_cases (
+    id VARCHAR(64) PRIMARY KEY,
+    suite_id VARCHAR(64) NOT NULL,
+    case_id VARCHAR(64) NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
+);
+
+-- 评估报告表
+CREATE TABLE IF NOT EXISTS agent_eval_reports (
+    id VARCHAR(64) PRIMARY KEY,
+    suite_id VARCHAR(64),
+    agent_id VARCHAR(64),
+    name VARCHAR(200),
+    status VARCHAR(20),
+    overall_score DOUBLE PRECISION,
+    trajectory_score DOUBLE PRECISION,
+    llm_judge_score DOUBLE PRECISION,
+    total_cases INTEGER,
+    completed_cases INTEGER,
+    passed_cases INTEGER,
+    summary TEXT,
+    config_json TEXT,
+    user_id VARCHAR(64) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
+);
+
+-- 评估报告明细表
+CREATE TABLE IF NOT EXISTS agent_eval_report_items (
+    id VARCHAR(64) PRIMARY KEY,
+    report_id VARCHAR(64) NOT NULL,
+    case_id VARCHAR(64) NOT NULL,
+    overall_score DOUBLE PRECISION,
+    trajectory_score DOUBLE PRECISION,
+    llm_score DOUBLE PRECISION,
+    passed BOOLEAN,
+    feedback TEXT,
+    trace_id VARCHAR(64),
+    duration_ms BIGINT,
+    tokens_used INTEGER,
+    details_json TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
+);

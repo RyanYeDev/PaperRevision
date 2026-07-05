@@ -73,4 +73,31 @@ export const api = {
     list: () => httpClient.get("/agents"),
     create: (data: unknown) => httpClient.post("/agents", data),
   },
+  evaluation: {
+    history: (resultId: string) => httpClient.get(`/evaluation/history/${resultId}`),
+    trajectory: (sessionId: string) => httpClient.get(`/evaluation/trajectory/${sessionId}`),
+  },
+  testCases: {
+    list: () => httpClient.get("/evaluation/test-cases"),
+    create: (data: unknown) => httpClient.post("/evaluation/test-cases", data),
+    detail: (id: string) => httpClient.get(`/evaluation/test-cases/${id}`),
+    update: (id: string, data: unknown) => httpClient.put(`/evaluation/test-cases/${id}`, data),
+    delete: (id: string) => httpClient.delete(`/evaluation/test-cases/${id}`),
+  },
+  testSuites: {
+    list: () => httpClient.get("/evaluation/test-suites"),
+    create: (data: unknown) => httpClient.post("/evaluation/test-suites", data),
+    detail: (id: string) => httpClient.get(`/evaluation/test-suites/${id}`),
+    update: (id: string, data: unknown) => httpClient.put(`/evaluation/test-suites/${id}`, data),
+    delete: (id: string) => httpClient.delete(`/evaluation/test-suites/${id}`),
+    addCase: (suiteId: string, caseId: string, sortOrder?: number) =>
+      httpClient.post(`/evaluation/test-suites/${suiteId}/cases`, { caseId, sortOrder }),
+    removeCase: (suiteId: string, caseId: string) =>
+      httpClient.delete(`/evaluation/test-suites/${suiteId}/cases/${caseId}`),
+    run: (id: string) => httpClient.post(`/evaluation/test-suites/${id}/run`),
+    reports: (id: string) => httpClient.get(`/evaluation/test-suites/${id}/reports`),
+  },
+  reports: {
+    items: (reportId: string) => httpClient.get(`/evaluation/test-suites/reports/${reportId}/items`),
+  },
 };
