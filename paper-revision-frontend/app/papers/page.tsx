@@ -12,6 +12,7 @@ export default function PapersPage() {
   const [papers, setPapers] = useState<Paper[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => { loadPapers(); }, []);
 
@@ -28,7 +29,10 @@ export default function PapersPage() {
     setUploading(true);
     try {
       await api.papers.upload(file);
+      setMessage("");
       await loadPapers();
+    } catch {
+      setMessage("上传失败，请重试");
     } finally { setUploading(false); }
   }
 
@@ -41,6 +45,13 @@ export default function PapersPage() {
           <input type="file" accept=".pdf" onChange={handleUpload} className="hidden" disabled={uploading} />
         </label>
       </div>
+
+      {message && (
+        <div className="mb-4 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-600">
+          {message}
+          <button className="ml-3 underline" onClick={() => setMessage("")}>关闭</button>
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-12 text-gray-500">加载中...</div>

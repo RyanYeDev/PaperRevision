@@ -5,6 +5,12 @@ import "./globals.css";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN">
+      <head>
+        <title>PaperRevision - 智能论文返修平台</title>
+        <meta name="description" content="上传论文PDF，输入返修意见，AI Agent自动分析并给出修改方案" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📝</text></svg>" />
+      </head>
       <body>
         <AuthProvider>
           <NavBar />
