@@ -58,12 +58,53 @@ public class SkillRegistry {
         return sb.toString();
     }
 
+    /** 记录 Skill 使用 */
+    public void recordUsage(String skillId, boolean success) {
+        SkillDefinition skill = skills.get(skillId);
+        if (skill == null) return;
+        skill.useCount++;
+        skill.lastUsedAt = System.currentTimeMillis();
+        if (success) {
+            skill.successCount++;
+        }
+        skill.successRate = skill.useCount > 0 ? (double) skill.successCount / skill.useCount : 0;
+        logger.debug("Skill使用记录: {} success={} rate={:.0%}", skillId, success, skill.successRate);
+    }
+
+    /** 获取使用最频繁的 Skill Top N */
+    public List<SkillDefinition> getTopUsedSkills(int n) {
+        return skills.values().stream()
+                .sorted((a, b) -> Integer.compare(b.useCount, a.useCount))
+                .limit(n).toList();
+    }
+
+    /** 获取成功率最高的 Skill Top N */
+    public List<SkillDefinition> getTopPerformingSkills(int n) {
+        return skills.values().stream()
+                .filter(s -> s.useCount > 0)
+                .sorted((a, b) -> Double.compare(b.successRate, a.successRate))
+                .limit(n).toList();
+    }
+
+    /** 获取长时间未使用的 Skill（超过 thresholdMs 毫秒）*/
+    public List<SkillDefinition> getStaleSkills(long thresholdMs) {
+        long now = System.currentTimeMillis();
+        return skills.values().stream()
+                .filter(s -> s.lastUsedAt > 0 && (now - s.lastUsedAt) > thresholdMs)
+                .toList();
+    }
+
     /** Skill定义 */
     public static class SkillDefinition {
         private final String id;
         private final String name;
         private final String description;
         private final List<String> capabilities;
+        /** 使用追踪 — Skill 自动进化的数据基础 */
+        private int useCount = 0;
+        private int successCount = 0;
+        private double successRate = 0;
+        private long lastUsedAt = 0;
 
         public SkillDefinition(String id, String name, String description, List<String> capabilities) {
             this.id = id; this.name = name; this.description = description; this.capabilities = capabilities;
@@ -72,5 +113,9 @@ public class SkillRegistry {
         public String getName() { return name; }
         public String getDescription() { return description; }
         public List<String> getCapabilities() { return capabilities; }
+        public int getUseCount() { return useCount; }
+        public int getSuccessCount() { return successCount; }
+        public double getSuccessRate() { return successRate; }
+        public long getLastUsedAt() { return lastUsedAt; }
     }
 }
