@@ -68,7 +68,8 @@ public class SkillRegistry {
             skill.successCount++;
         }
         skill.successRate = skill.useCount > 0 ? (double) skill.successCount / skill.useCount : 0;
-        logger.debug("Skill使用记录: {} success={} rate={:.0%}", skillId, success, skill.successRate);
+        logger.debug("Skill使用记录: {} success={} rate={}", skillId, success,
+                String.format("%.0f%%", skill.successRate * 100));
     }
 
     /** 获取使用最频繁的 Skill Top N */

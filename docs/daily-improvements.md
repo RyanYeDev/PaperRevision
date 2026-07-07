@@ -4,6 +4,14 @@
 
 ---
 
+## 2026-07-07
+
+- **SkillRegistry 单元测试**：为昨日新增的 `recordUsage()`、`getTopUsedSkills()`、`getTopPerformingSkills()`、`getStaleSkills()` 方法补充 7 个单元测试
+- **修复日志格式化**：`SkillRegistry.recordUsage()` 中 SLF4J 占位符 `{:.0%}` 不支持格式化，改为 `String.format("%.0f%%", ...)` 方式
+- 影响范围：`domain/tool/service/SkillRegistry.java`(修3行)、测试新增(80行)
+
+---
+
 ## 2026-07-06
 
 - **上下文分层压缩基础 — TokenCounter**：新增 `TokenCounter` 工具类，支持中英文 token 精确估算（中文字符 ×1.5 + 英文单词 ×1.3）、快速估算、批量估算、`ContextBudget` 预算管理，10 个单元测试全部通过
