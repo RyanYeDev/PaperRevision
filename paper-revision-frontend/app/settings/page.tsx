@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { api } from "@/lib/api";
+import { api, API_BASE } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function SettingsPage() {
@@ -147,7 +147,7 @@ function GrobidSettings() {
 
   useEffect(() => {
     if (!token) return;
-    fetch("http://localhost:8088/api/grobid/status", { headers })
+    fetch(`${API_BASE}/grobid/status`, { headers })
       .then(r => r.json())
       .then(d => setStatus(d.data))
       .catch(() => {});
@@ -160,8 +160,8 @@ function GrobidSettings() {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      await fetch("http://localhost:8088/api/grobid/models/upload", { method: "POST", body: formData });
-      const r = await fetch("http://localhost:8088/api/grobid/status");
+      await fetch(`${API_BASE}/grobid/models/upload`, { method: "POST", body: formData });
+      const r = await fetch(`${API_BASE}/grobid/status`);
       const d = await r.json();
       setStatus(d.data);
       alert("模型安装成功！");
@@ -226,8 +226,8 @@ function GrobidSettings() {
       {/* 已安装：卸载按钮 */}
       {status?.installed && (
         <button onClick={async () => {
-          await fetch("http://localhost:8088/api/grobid/models", { method: "DELETE" });
-          const r = await fetch("http://localhost:8088/api/grobid/status");
+          await fetch(`${API_BASE}/grobid/models`, { method: "DELETE" });
+          const r = await fetch(`${API_BASE}/grobid/status`);
           setStatus((await r.json()).data);
         }}
           className="px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">

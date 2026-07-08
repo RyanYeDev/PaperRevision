@@ -1,7 +1,6 @@
 "use client";
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-
-const API = "http://localhost:8088/api";
+import { API_BASE } from "@/lib/api";
 
 interface User { id: string; nickname: string; email: string; }
 interface AuthCtx {
@@ -22,14 +21,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("token");
     if (saved) {
       setToken(saved);
-      fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${saved}` } })
+      fetch(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${saved}` } })
         .then(r => r.json()).then(d => { if (d.code === 200) setUser(d.data); })
         .finally(() => setLoading(false));
     } else { setLoading(false); }
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await fetch(`${API}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+    const res = await fetch(`${API_BASE}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
     const d = await res.json();
     if (d.code !== 200) throw new Error(d.message);
     localStorage.setItem("token", d.data.token);
@@ -38,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const register = useCallback(async (email: string, nickname: string, password: string) => {
-    const res = await fetch(`${API}/auth/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, nickname, password }) });
+    const res = await fetch(`${API_BASE}/auth/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, nickname, password }) });
     const d = await res.json();
     if (d.code !== 200) throw new Error(d.message);
   }, []);

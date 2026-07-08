@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088/api";
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088/api";
 
 class HttpClient {
   private getToken(): string | null {
@@ -17,7 +17,10 @@ class HttpClient {
     };
 
     const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-    if (!res.ok) throw new Error(`API Error: ${res.status}`);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error((body as any)?.message || `API Error: ${res.status}`);
+    }
     return res.json();
   }
 

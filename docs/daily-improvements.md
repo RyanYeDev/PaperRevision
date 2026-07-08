@@ -4,6 +4,14 @@
 
 ---
 
+## 2026-07-08
+
+- **API 错误消息透传**：`HttpClient.request()` 捕获非 200 响应时，解析后端返回的 JSON `message` 字段，替换原有的通用 `API Error: 状态码` 提示，用户可见具体错误（如"邮箱已被注册"）
+- **消除 API_BASE 硬编码**：导出 `API_BASE` 常量供全项目复用，`AuthContext` 和 `settings/page.tsx` 中原有的 6 处 `http://localhost:8088/api` 硬编码改为引用统一常量
+- 影响范围：`lib/api.ts`(修 4 行)、`contexts/AuthContext.tsx`(修 4 行)、`app/settings/page.tsx`(修 6 行)（总计 +14 行）
+
+---
+
 ## 2026-07-07
 
 - **SkillRegistry 单元测试**：为昨日新增的 `recordUsage()`、`getTopUsedSkills()`、`getTopPerformingSkills()`、`getStaleSkills()` 方法补充 7 个单元测试
