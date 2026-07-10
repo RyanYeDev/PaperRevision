@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-07-10 · 路线A Step2（上下文分层压缩）
+
+- **所属路线/Step**：上下文分层压缩 — Step 2: ContextCompressor 服务
+- **ContextCompressor 三层压缩服务**：输入长文本，输出三层 —— `full`(全量) / `summary`(LLM 摘要) / `keywords`(本地词频提取)
+  - LLM 摘要通过 `summarizer` 函数**注入**，与具体 provider 解耦（生产传 `chatModel::generate`，单测传假函数），本服务无基础设施硬依赖
+  - 关键词层本地词频提取（过滤中英文停用词 + 英文小写归一化），可作 LLM 不可用时的**降级兜底**
+  - `CompressedContext` 附各层 token 估算（复用 Step1 `TokenCounter`）与 `summaryRatio()` 压缩率
+  - 7 个单元测试全部通过（三层产出 / prompt 注入 / null 兜底 / 异常降级 / 词频排序 / 停用词过滤 / 压缩率）
+- 影响范围：`infrastructure/context/ContextCompressor.java`(新，~110 行含注释，核心逻辑约 60 行)、`ContextCompressorTest.java`(新，80 行)
+- 备注：无新依赖；DDD 合规（infra → infra utils）；含注释略超 50 行约束
+
+---
+
 ## 2026-07-10
 
 - **所属路线**：Skill 自动进化（实践扩展）—— 学习外部 `frontend-slides` skill 的设计哲学并内化为项目设计系统
