@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-07-10
+
+- **所属路线**：Skill 自动进化（实践扩展）—— 学习外部 `frontend-slides` skill 的设计哲学并内化为项目设计系统
+- **前端设计系统大改（清新升级 / Refined Fresh）**：
+  - 建立单一事实来源的设计 token（`globals.css :root`）：加深主蓝 `#5b9fd4`、暖黄点缀、分层渐变 mesh 背景、字体配对（Baloo 2 + Nunito + 顶会体）、staggered 载入动画系统（`.reveal`）
+  - `tailwind.config.ts` 接入 token，可用 `bg-primary`/`font-display` 等语义类
+  - 统一 `Button`/`Card`/`Input`/`Textarea` 到 token，消除 `bg-blue-600` 设计漂移
+  - 改造 `layout`（毛玻璃导航活跃态 + 字体 link）、首页 Hero（氛围光斑 + 阶梯入场）、`papers`/`login`/`register`/`settings` 页
+  - 新增 `docs/design-system.md` 沉淀设计原则（Skill 自进化产物）
+- 影响范围：`app/globals.css`(重写)、`tailwind.config.ts`、`components/ui/*`(4 个)、`app/layout.tsx`、`app/page.tsx`、`app/papers/page.tsx`、`app/auth/*`、`app/settings/page.tsx`、`docs/design-system.md`(新)
+- 备注：本次为用户驱动的大改，超出每日 ≤50 行约束
+
+---
+
 ## 2026-07-08
 
 - **API 错误消息透传**：`HttpClient.request()` 捕获非 200 响应时，解析后端返回的 JSON `message` 字段，替换原有的通用 `API Error: 状态码` 提示，用户可见具体错误（如"邮箱已被注册"）

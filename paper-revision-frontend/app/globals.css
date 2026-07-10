@@ -2,7 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 顶会体 - 中国学术圈最火的可爱字体 */
+/* ===========================================
+   字体 — 顶会体(中文可爱体) + Baloo 2(圆润拉丁显示) + Nunito(圆润拉丁正文)
+   Baloo 2 / Nunito 从 layout.tsx 的 <link> 加载；顶会体走 CDN @font-face
+   =========================================== */
 @font-face {
   font-family: 'DingHuiTi';
   src: url('https://cdn.jsdelivr.net/gh/Anthonyyu114/dinghuiti@main/font/DingHuiTi-Regular.woff2') format('woff2');
@@ -14,44 +17,232 @@
   font-weight: bold; font-style: normal; font-display: swap;
 }
 
+/* ===========================================
+   设计 TOKEN — 单一事实来源，改这里即改全站
+   审美：清新升级 / Refined Fresh（清新卡通蓝黄，硬化 commit）
+   =========================================== */
 :root {
-  --primary: #8bb8d0;
+  /* 主色阶 — 加深主蓝以强化 commit（旧 #8bb8d0 偏怯） */
+  --primary: #5b9fd4;        /* 主蓝，饱和加深 */
+  --primary-deep: #3d7fb8;   /* 深蓝，用于渐变/悬停/强调 */
+  --primary-soft: #8bb8d0;   /* 浅蓝，保留旧主色作淡色调 */
+  --primary-tint: #eaf3f9;   /* 极浅蓝底，用于选中/高亮块 */
+
+  /* 点缀色 — 暖黄 */
   --accent: #f2c94c;
+  --accent-deep: #e0af2e;
+  --accent-ink: #7a6200;     /* 黄底上的可读深色文字 */
+
+  /* 语义色 */
   --success: #7bc89c;
-  --danger: #e8a0a0;
-  --text: #4a5568;
+  --success-tint: #e8f6ee;
+  --danger: #e88a8a;
+  --danger-tint: #fdeeee;
+
+  /* 文字 */
+  --text: #3f4a5a;           /* 主文字，比旧 #4a5568 略深提升对比 */
   --text-light: #94a3b8;
+  --text-on-primary: #ffffff;
+
+  /* 表面/边框 */
   --card: #ffffff;
   --border: #e8e0d5;
+  --border-strong: #d8cfc0;
+
+  /* 圆角 */
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 22px;
+
+  /* 阴影 */
+  --shadow-sm: 0 2px 12px rgba(120, 100, 80, 0.07);
+  --shadow-md: 0 6px 24px rgba(120, 100, 80, 0.11);
+  --shadow-primary: 0 6px 18px rgba(91, 159, 212, 0.28);
+
+  /* 字体栈 */
+  --font-display: 'Baloo 2', 'DingHuiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-body: 'Nunito', 'DingHuiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  /* 缓动 */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-* { font-family: 'DingHuiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
-
+/* ===========================================
+   基础样式
+   =========================================== */
 body {
-  background: linear-gradient(160deg, #f5f0eb 0%, #ecf5fa 25%, #f0ebe8 55%, #f7f3ed 100%);
+  font-family: var(--font-body);
+  /* 分层渐变 mesh — 营造氛围与深度（frontend-slides 原则） */
+  background:
+    radial-gradient(ellipse 60% 50% at 12% 18%, rgba(139, 184, 208, 0.28), transparent 60%),
+    radial-gradient(ellipse 50% 45% at 88% 12%, rgba(242, 201, 76, 0.16), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 50% 95%, rgba(123, 200, 156, 0.12), transparent 60%),
+    linear-gradient(160deg, #f5f0eb 0%, #ecf5fa 40%, #f0ebe8 72%, #f7f3ed 100%);
   background-attachment: fixed;
   color: var(--text);
   min-height: 100vh;
 }
 
-/* 卡通卡片 */
-.paper-card {
-  background: white;
-  border: 1.5px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(120,100,80,0.07);
-  transition: .2s;
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
-.paper-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(120,100,80,0.11); }
 
-/* 卡通按钮动画 */
-.btn-cartoon { transition: .15s; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-.btn-cartoon:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
-.btn-cartoon:active { transform: translateY(0); }
+/* 原生表单控件默认不继承字体，显式继承避免掉回浏览器默认字体 */
+button, input, textarea, select {
+  font-family: inherit;
+}
 
-/* 导航栏毛玻璃 */
+/* ===========================================
+   卡片
+   =========================================== */
+.paper-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s var(--ease-out-expo), box-shadow 0.2s var(--ease-out-expo);
+}
+.paper-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+/* 特性卡：悬停时透出主色顶边 */
+.feature-card {
+  position: relative;
+  overflow: hidden;
+}
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s var(--ease-out-expo);
+}
+.feature-card:hover::before { transform: scaleX(1); }
+
+/* ===========================================
+   按钮
+   =========================================== */
+.btn-cartoon {
+  transition: transform 0.15s var(--ease-spring), box-shadow 0.15s var(--ease-out-expo), filter 0.15s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+.btn-cartoon:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1); filter: brightness(1.03); }
+.btn-cartoon:active { transform: translateY(0) scale(0.98); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+  color: var(--text-on-primary);
+}
+.btn-primary:hover { box-shadow: var(--shadow-primary); }
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  color: var(--accent-ink);
+}
+
+/* ===========================================
+   导航栏毛玻璃
+   =========================================== */
 .nav-cartoon {
-  background: rgba(255,255,255,0.82);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1.5px solid var(--border);
+}
+.nav-link {
+  position: relative;
+  transition: color 0.2s;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: -4px;
+  width: 100%; height: 2px;
+  background: var(--primary);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.2s var(--ease-out-expo);
+}
+.nav-link:hover::after,
+.nav-link.active::after { transform: scaleX(1); }
+
+/* ===========================================
+   表单控件 — 统一焦点态到主色
+   =========================================== */
+.field {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.875rem;
+  background: var(--card);
+  color: var(--text);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(91, 159, 212, 0.18);
+}
+
+/* ===========================================
+   徽章
+   =========================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.badge-primary { background: var(--primary-tint); color: var(--primary-deep); }
+.badge-success { background: var(--success-tint); color: #3f9268; }
+.badge-warn { background: #fef6e0; color: var(--accent-ink); }
+
+/* ===========================================
+   载入动画 — staggered reveal（frontend-slides 签名）
+   一次编排好的入场，比零散微交互更有质感
+   =========================================== */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+  opacity: 0;
+  animation: reveal-up 0.7s var(--ease-out-expo) forwards;
+}
+/* 阶梯延迟：给同级子项加 .reveal 后用序号类错峰出现 */
+.reveal-1 { animation-delay: 0.05s; }
+.reveal-2 { animation-delay: 0.12s; }
+.reveal-3 { animation-delay: 0.19s; }
+.reveal-4 { animation-delay: 0.26s; }
+.reveal-5 { animation-delay: 0.33s; }
+.reveal-6 { animation-delay: 0.40s; }
+
+/* 浮动装饰（Hero 光斑轻微呼吸） */
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.04); }
+}
+.float-soft { animation: float-soft 6s ease-in-out infinite; }
+
+/* ===========================================
+   无障碍：尊重减少动效偏好
+   =========================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.15s !important;
+  }
+  .reveal { opacity: 1; }
 }

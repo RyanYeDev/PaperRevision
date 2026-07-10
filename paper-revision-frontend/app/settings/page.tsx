@@ -9,17 +9,18 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">系统设置</h2>
+      <h2 className="text-2xl font-display font-bold mb-6" style={{ color: "var(--text)" }}>⚙️ 系统设置</h2>
 
-      <div className="flex gap-4 mb-6">
+      <div className="flex gap-3 mb-6">
         {[
           { key: "providers" as const, label: "LLM提供商" },
           { key: "agents" as const, label: "Agent配置" },
           { key: "grobid" as const, label: "GROBID模型" },
         ].map((tab) => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${
-              activeTab === tab.key ? "bg-blue-600 text-white" : "bg-white border text-gray-600"}`}>
+            className={`btn-cartoon px-4 py-2 rounded-full text-sm font-bold border ${
+              activeTab === tab.key ? "btn-primary" : "bg-white"}`}
+            style={activeTab === tab.key ? {} : { borderColor: "var(--border)", color: "var(--text)" }}>
             {tab.label}
           </button>
         ))}
@@ -116,21 +117,21 @@ function AgentSettings() {
   }
 
   return (
-    <div className="p-6 bg-white rounded-lg border max-w-lg">
-      <h3 className="font-semibold mb-4">创建Agent</h3>
+    <div className="paper-card p-6 max-w-lg">
+      <h3 className="font-display font-bold mb-4" style={{ color: "var(--text)" }}>创建Agent</h3>
       <div className="space-y-3">
         <div>
-          <label className="block text-sm mb-1">Agent名称</label>
+          <label className="block text-sm font-bold mb-1" style={{ color: "var(--text)" }}>Agent名称</label>
           <input value={name} onChange={(e) => setName(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-sm" placeholder="论文返修助手" />
+            className="field" placeholder="论文返修助手" />
         </div>
         <div>
-          <label className="block text-sm mb-1">System Prompt</label>
+          <label className="block text-sm font-bold mb-1" style={{ color: "var(--text)" }}>System Prompt</label>
           <textarea value={systemPrompt} onChange={(e) => setSystemPrompt(e.target.value)} rows={5}
-            className="w-full border rounded px-3 py-2 text-sm" placeholder="你是一个专业的论文返修助手..." />
+            className="field resize-y" placeholder="你是一个专业的论文返修助手..." />
         </div>
         <button onClick={handleCreate}
-          className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          className="btn-cartoon btn-primary w-full py-2.5 rounded-soft font-bold">
           创建Agent
         </button>
       </div>
@@ -197,7 +198,7 @@ function GrobidSettings() {
               className="text-xs text-blue-600 underline hover:text-blue-800 mb-3 block">
               点击下载模型包 →
             </a>
-            <label className="inline-block px-4 py-2 bg-blue-600 text-white text-sm rounded-lg cursor-pointer hover:bg-blue-700">
+            <label className="btn-cartoon btn-primary inline-block px-4 py-2 text-sm rounded-soft cursor-pointer">
               {uploading ? "安装中..." : "上传模型zip"}
               <input type="file" accept=".zip" onChange={handleUpload} className="hidden" disabled={uploading} />
             </label>
