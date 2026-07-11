@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-07-11 · 路线B Step2（Skill 自动进化）
+
+- **所属路线/Step**：Skill 自动进化 — Step 2: 使用数据持久化
+- **skill_usage_log 表 + 实体 + 仓储**：每次 Skill 调用即落一条日志，为后续 Step3(推荐排序)/Step4(模式发现)/Step5(自动生成建议) 提供分析数据
+  - `SkillUsageEntity`(skill_id / success / duration_ms / context_size，继承 BaseEntity 审计字段)
+  - `SkillUsageRepository`(MyBatis-Plus @Mapper)
+  - `SkillRegistry.recordUsage()` 新增 4 参重载（含耗时/上下文规模）并**同步写库**；仓储通过 `@Autowired(required=false)` 可选注入，单测/无 Spring 时降级为纯内存；入库异常不影响主流程
+  - 建表 DDL 加入实际生效的 `db/h2-init.sql` 与 postgres `db/init.sql` 保持一致
+  - 6 个新单测 + 原 7 个 SkillRegistryTest 全过（入库校验 / 内存统计不变 / 无仓储不抛 / 2参委托 / 未知 skill 不入库 / 入库失败不中断）
+- 影响范围：`domain/tool/model/SkillUsageEntity.java`(新)、`domain/tool/repository/SkillUsageRepository.java`(新)、`domain/tool/service/SkillRegistry.java`(+约 25 行)、`db/h2-init.sql`、`db/init.sql`、`SkillRegistryPersistenceTest.java`(新)
+- 备注：无新依赖（Mockito 来自 spring-boot-starter-test）；未破坏既有 `recordUsage(id,success)` 签名
+
+---
+
 ## 2026-07-10 · 路线A Step2（上下文分层压缩）
 
 - **所属路线/Step**：上下文分层压缩 — Step 2: ContextCompressor 服务

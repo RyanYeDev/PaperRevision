@@ -99,3 +99,15 @@ CREATE TABLE IF NOT EXISTS agent_eval_report_items (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, deleted_at TIMESTAMP
 );
+
+-- Skill 使用日志（Skill 自动进化 Step 2 —— 使用数据持久化）
+CREATE TABLE IF NOT EXISTS skill_usage_log (
+    id VARCHAR(64) PRIMARY KEY,
+    skill_id VARCHAR(64) NOT NULL,
+    success BOOLEAN,
+    duration_ms BIGINT,
+    context_size INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
+);

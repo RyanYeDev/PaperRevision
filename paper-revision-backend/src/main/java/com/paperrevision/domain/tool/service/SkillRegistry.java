@@ -1,7 +1,10 @@
 package com.paperrevision.domain.tool.service;
 
+import com.paperrevision.domain.tool.model.SkillUsageEntity;
+import com.paperrevision.domain.tool.repository.SkillUsageRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -14,8 +17,16 @@ public class SkillRegistry {
 
     private final Map<String, SkillDefinition> skills = new LinkedHashMap<>();
 
+    /** 使用日志仓储，可选注入（单测无 Spring 时为 null，跳过入库） */
+    @Autowired(required = false)
+    private SkillUsageRepository usageRepository;
+
     public SkillRegistry() {
         registerBuiltinSkills();
+    }
+
+    public void setUsageRepository(SkillUsageRepository usageRepository) {
+        this.usageRepository = usageRepository;
     }
 
     private void registerBuiltinSkills() {
@@ -58,8 +69,13 @@ public class SkillRegistry {
         return sb.toString();
     }
 
-    /** 记录 Skill 使用 */
+    /** 记录 Skill 使用（简版，耗时/上下文规模默认 0） */
     public void recordUsage(String skillId, boolean success) {
+        recordUsage(skillId, success, 0L, 0);
+    }
+
+    /** 记录 Skill 使用（含耗时与上下文规模），同步写库（若仓储可用） */
+    public void recordUsage(String skillId, boolean success, long durationMs, int contextSize) {
         SkillDefinition skill = skills.get(skillId);
         if (skill == null) return;
         skill.useCount++;
@@ -70,6 +86,15 @@ public class SkillRegistry {
         skill.successRate = skill.useCount > 0 ? (double) skill.successCount / skill.useCount : 0;
         logger.debug("Skill使用记录: {} success={} rate={}", skillId, success,
                 String.format("%.0f%%", skill.successRate * 100));
+
+        // 同步落库，供后续 Step3 推荐排序 / Step4 模式发现分析；入库失败不影响主流程
+        if (usageRepository != null) {
+            try {
+                usageRepository.insert(new SkillUsageEntity(skillId, success, durationMs, contextSize));
+            } catch (Exception e) {
+                logger.warn("Skill使用日志入库失败: {} - {}", skillId, e.getMessage());
+            }
+        }
     }
 
     /** 获取使用最频繁的 Skill Top N */
