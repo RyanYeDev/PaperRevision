@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-07-12 · 路线A Step3（上下文分层压缩）
+
+- **所属路线/Step**：上下文分层压缩 — Step 3: LayeredContextManager
+- **分层上下文管理器**：根据 `TokenCounter.ContextBudget` 为每段内容自动选层级
+  - `selectLayer(ctx, remaining)`：预算足用 FULL，不足降 SUMMARY，再不足降 KEYWORDS；关键词层为兜底（预算为 0 也返回，保证核心信息不丢）
+  - `assemble(segments, budget)`：逐段选层并扣减预算，拼接成最终上下文；预算紧张时靠后段自动降级
+  - 摘要为空时跳过 SUMMARY 直接降到 KEYWORDS
+  - 复用 Step2 `ContextCompressor.CompressedContext` 三层 + Step1 `TokenCounter` 估算
+  - 7 个单元测试全过（选全量/降摘要/降关键词/关键词兜底/空摘要跳过/组装全量/组装降级）
+- 影响范围：`infrastructure/context/LayeredContextManager.java`(新，~55 行核心+DTO)、`LayeredContextManagerTest.java`(新)
+- 备注：无新依赖；DDD 合规（infra→infra）
+
+---
+
 ## 2026-07-11 · 路线B Step2（Skill 自动进化）
 
 - **所属路线/Step**：Skill 自动进化 — Step 2: 使用数据持久化
