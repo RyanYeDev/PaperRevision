@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-07-13 · 路线B Step3（Skill 自动进化）
+
+- **所属路线/Step**：Skill 自动进化 — Step 3: SkillRecommender
+- **Skill 推荐排序器**：基于成功率(S1 追踪字段)、使用频次归一化、上下文关键词匹配度三项加权评分排序（权重 0.4/0.3/0.3）
+  - 冷启动技能（未使用过）默认成功率 50%，不因初生而无排名
+  - 关键词匹配同时查技能名称、描述、capabilities，匹配者得满分
+  - 支持 topN 截断
+  - 构造注入 SkillRegistry，评分方法 `score()` 包级可测
+  - 6 个测试全过（成功率排序/冷启动评分/关键词提权/capability匹配/topN/null安全）
+- 影响范围：`domain/tool/service/SkillRecommender.java`(新，~65 行含注释)、`SkillRecommenderTest.java`(新)
+- 备注：无新依赖；纯纯域逻辑不触碰基础设施；为后续 Step4(成功模式发现)/Step5(自动生成建议) 提供排序基座
+
+---
+
 ## 2026-07-12 · 路线A Step3（上下文分层压缩）
 
 - **所属路线/Step**：上下文分层压缩 — Step 3: LayeredContextManager
