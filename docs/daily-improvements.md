@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-07-15 · 路线A Step4（上下文分层压缩）
+
+- **所属路线/Step**：上下文分层压缩 — Step 4: RAG检索集成
+- **检索结果压缩器**：`RetrievalCompressor` 连接 RAG 检索与上下文压缩管线
+  - `compressAndAssemble(chunks, summarizer, budget)`：检索结果→逐段压缩→按预算组装，输出 LLM 就绪文本
+  - `compressAndAssembleLocally(chunks, budget)`：纯本地压缩（无 LLM），适合降级/预览
+  - `layerDistribution(chunks, budget)`：统计各层级分布，用于监控调优
+  - 复用 Step1 TokenCounter + Step2 ContextCompressor + Step3 LayeredContextManager
+  - 7 个单元测试全过（LLM注入/本地压缩/空输入/LLM异常降级/紧预算降级/层级分布/null安全）
+- 影响范围：`infrastructure/context/RetrievalCompressor.java`(新，~80 行含注释)、`RetrievalCompressorTest.java`(新)
+- 备注：放在 infrastructure 层（Infrastructure→Domain 允许），Application 层可直接注入编排检索+压缩；无新依赖
+
+---
+
 ## 2026-07-13 · 路线B Step3（Skill 自动进化）
 
 - **所属路线/Step**：Skill 自动进化 — Step 3: SkillRecommender
