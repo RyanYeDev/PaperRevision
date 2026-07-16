@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-07-16 · 路线B Step4（Skill 自动进化）
+
+- **所属路线/Step**：Skill 自动进化 — Step 4: 成功模式发现
+- **成功模式分析器**：`SuccessPatternAnalyzer` 分析高成功率 skill 的共同特征
+  - `analyzePatterns(minRate)`：提取成功率 ≥ 阈值的技能的能力词汇频率排名
+  - `extractCommonCapabilities(minRate, minOccurrence)`：筛选高频公共能力词
+  - `clusterSimilarSkills(minSimilarity)`：Jaccard 相似度 + Union-Find 聚类，归并能力重叠的技能组，输出共享能力和平均成功率
+  - 构造注入 SkillRegistry，SkillUsageRepository 可选（无数据时返回空列表不抛异常）
+  - 7 个单元测试全过（高成功率模式/公共能力提取/空数据/Jaccard计算/聚类/阈值边界/null安全）
+- 影响范围：`domain/tool/service/SuccessPatternAnalyzer.java`(新，~120 行含注释)、`SuccessPatternAnalyzerTest.java`(新)
+- 备注：为 Step5(自动生成 Skill 建议) 提供数据基座——聚类结果可直接作为候选新 Skill 的输入
+
+---
+
 ## 2026-07-15 · 路线A Step4（上下文分层压缩）
 
 - **所属路线/Step**：上下文分层压缩 — Step 4: RAG检索集成
