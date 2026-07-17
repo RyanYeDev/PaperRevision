@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-07-17 · 路线A Step5（上下文分层压缩）
+
+- **所属路线/Step**：上下文分层压缩 — Step 5: Agent 上下文窗口自适应
+- **Agent 上下文适配器**：`AgentContextAdapter` — Agent 执行前自动估算 token，超预算触发分层压缩
+  - `adapt(systemPrompt, userInput, ragChunks, summarizer, maxTokens)`：完整适配 — system prompt（优先全量）→ RAG chunks（预算紧张时压缩）→ user input（关键词兜底）
+  - `adaptSimple(sys, user, summarizer, maxTokens)`：简化版，无 RAG 时使用
+  - `isOverBudget(sys, user, maxTokens)`：轻量预检，快速判断是否需要压缩
+  - 默认预留 30% 窗口给 LLM 响应（`RESPONSE_RESERVE_RATIO`）
+  - 复用 Step1-4 全链路：TokenCounter → ContextCompressor → LayeredContextManager → RetrievalCompressor 理念
+  - 7 个单元测试全过（小上下文不降级/紧预算降级/RAG集成/null安全/超预算检测/利用率/关键词兜底）
+- 影响范围：`infrastructure/context/AgentContextAdapter.java`(新，~110 行含注释)、`AgentContextAdapterTest.java`(新)
+- 备注：路线A 五步全部完成 🎉；`AdaptedContext` record 返回利用率便于监控
+
+---
+
 ## 2026-07-16 · 路线B Step4（Skill 自动进化）
 
 - **所属路线/Step**：Skill 自动进化 — Step 4: 成功模式发现
