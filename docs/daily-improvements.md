@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-07-18 · 路线B Step5（Skill 自动进化）🎉
+
+- **所属路线/Step**：Skill 自动进化 — Step 5: 自动生成 Skill 建议
+- **Skill 进化服务**：`SkillEvolutionService` 分析使用数据自动产出候选新 Skill
+  - `generateCandidates()`：三种策略 — ① 高成功率能力词封装（distinctSkills≥2）→ 候选新技能；② 聚类间桥接 → 建议中间层技能
+  - `registerCandidate()`：人工审核后一键注册到 SkillRegistry
+  - `capabilityToName()`：将下划线能力词转为可读中文技能名
+  - 每个候选含：name / description / capabilities / confidence / rationale
+  - 候选按置信度降序排列
+  - 6 个单元测试全过（候选生成/降序/注册/空数据/不重名/名称可读）
+- 影响范围：`domain/tool/service/SkillEvolutionService.java`(新，~120 行含注释)、`SkillEvolutionServiceTest.java`(新)
+- 备注：🎉 **路线B Skill 自动进化 — 五步全部完成！** 从硬编码 4 个技能到自动分析→推荐→发现→生成的全闭环
+
+---
+
 ## 2026-07-17 · 路线A Step5（上下文分层压缩）
 
 - **所属路线/Step**：上下文分层压缩 — Step 5: Agent 上下文窗口自适应
