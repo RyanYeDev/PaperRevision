@@ -4,6 +4,34 @@
 
 ---
 
+## 2026-07-20 · 常规改进（Bug 修复）
+
+- **ContextCompressor 关键词提取正则修复**：
+  - `TOKEN_WORD` 中文匹配从 `{2,}` 改为 `{2,4}`，限制匹配长度 2-4 字
+  - 修复纯中文无标点文本的贪婪匹配问题：此前整个文本被匹配为单个"关键词"，导致三层压缩（FULL/SUMMARY/KEYWORDS）token 数完全相同、压缩完全失效
+  - 影响范围：`ContextCompressor.java`(1行)、`ContextCompressorTest.java`(1处断言调整)
+  - 测试：73/73 全过，无回归
+
+---
+
+## 2026-07-19 · 常规改进（代码优化）
+
+- **AgentContextAdapter 降级判断优化**：
+  - 用逐段选层结果跟踪 `downgraded` 替代旧版字符串拼接估算比较，判断更精准、无 GC 压力
+  - 新增 `isOverBudget(sys, user, ragChunks, maxTokens)` 重载，支持含 RAG chunks 的预算预检
+  - 两参数版委托到四参数版（ragChunks=null），消除重复计算逻辑
+- 影响范围：`infrastructure/context/AgentContextAdapter.java`（3 处修改，~15 行净变化）
+- 测试：28/28 全过，无回归
+
+- **AgentContextAdapter 降级判断优化**：
+  - 用逐段选层结果跟踪 `downgraded` 替代旧版字符串拼接估算比较，判断更精准、无 GC 压力
+  - 新增 `isOverBudget(sys, user, ragChunks, maxTokens)` 重载，支持含 RAG chunks 的预算预检
+  - 两参数版委托到四参数版（ragChunks=null），消除重复计算逻辑
+- 影响范围：`infrastructure/context/AgentContextAdapter.java`（3 处修改，~15 行净变化）
+- 测试：28/28 全过，无回归
+
+---
+
 ## 2026-07-18 · 路线B Step5（Skill 自动进化）🎉
 
 - **所属路线/Step**：Skill 自动进化 — Step 5: 自动生成 Skill 建议

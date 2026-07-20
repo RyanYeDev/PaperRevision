@@ -30,8 +30,8 @@ public class ContextCompressor {
     public static final String SUMMARY_PROMPT =
             "将以下文本压缩为不超过3句话的关键信息，只输出摘要本身，不要解释：\n\n";
 
-    /** 关键词候选：≥2 字中文词 或 ≥3 字母英文词 */
-    private static final Pattern TOKEN_WORD = Pattern.compile("[\\u4e00-\\u9fff]{2,}|[a-zA-Z]{3,}");
+    /** 关键词候选：2-4字中文词组 或 ≥3 字母英文词（限制长度防止贪婪匹配全文为单关键词） */
+    private static final Pattern TOKEN_WORD = Pattern.compile("[\\u4e00-\\u9fff]{2,4}|[a-zA-Z]{3,}");
 
     /** 精简中英文停用词 */
     private static final Set<String> STOP_WORDS = Set.of(

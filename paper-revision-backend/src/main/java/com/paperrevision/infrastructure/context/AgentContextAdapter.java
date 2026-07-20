@@ -63,6 +63,7 @@ public class AgentContextAdapter {
         // 1. System prompt（优先级最高，尽量全量）
         CompressedContext sysCtx = compressor.compress(systemPrompt, summarizer);
         String sysPart = selectForBudget(sysCtx, budget, "systemPrompt");
+        boolean downgraded = sysCtx.summaryTokens > 0 && sysPart.equals(sysCtx.summary);
         if (!sysPart.isEmpty()) parts.add(sysPart);
 
         // 2. RAG 检索上下文（优先级次之，预算紧张时优先压缩这部分）
@@ -71,6 +72,8 @@ public class AgentContextAdapter {
                 if (budget.remaining() <= 0) break;
                 CompressedContext chunkCtx = compressor.compress(chunk.getContent(), summarizer);
                 String chunkPart = selectForBudget(chunkCtx, budget, "ragChunk");
+                downgraded = downgraded
+                        || (chunkCtx.summaryTokens > 0 && chunkPart.equals(chunkCtx.summary));
                 if (!chunkPart.isEmpty()) parts.add(chunkPart);
             }
         }
@@ -78,14 +81,11 @@ public class AgentContextAdapter {
         // 3. 用户输入（优先级最低但必须保留——关键词兜底）
         CompressedContext userCtx = compressor.compress(userInput, summarizer);
         String userPart = selectOrDowngrade(userCtx, budget);
+        downgraded = downgraded || (userCtx.summaryTokens > 0 && userPart.equals(userCtx.summary));
         parts.add(userPart);
 
         String assembled = String.join("\n\n", parts);
         int totalTokens = TokenCounter.estimate(assembled);
-        boolean downgraded = totalTokens < TokenCounter.estimate(
-                systemPrompt + "\n\n" + userInput +
-                (ragChunks != null ? "\n\n" + ragChunks.stream()
-                        .map(DocumentChunkEntity::getContent).reduce("", (a, b) -> a + b) : ""));
 
         logger.info("Agent上下文适配: {}tokens (预算{}), 降级={}",
                 totalTokens, budgetLimit, downgraded);
@@ -98,10 +98,20 @@ public class AgentContextAdapter {
         return adapt(systemPrompt, userInput, null, summarizer, maxTokens);
     }
 
-    /** 快速检查是否超预算 */
-    public boolean isOverBudget(String systemPrompt, String userInput, int maxTokens) {
+    /** 快速检查是否超预算（含 RAG chunks） */
+    public boolean isOverBudget(String systemPrompt, String userInput,
+                                 List<DocumentChunkEntity> ragChunks, int maxTokens) {
         int total = TokenCounter.estimate(systemPrompt) + TokenCounter.estimate(userInput);
+        if (ragChunks != null) {
+            total += ragChunks.stream()
+                    .mapToInt(c -> TokenCounter.estimate(c.getContent())).sum();
+        }
         return total > (int) (maxTokens * (1.0 - RESPONSE_RESERVE_RATIO));
+    }
+
+    /** 快速检查是否超预算（不含 RAG） */
+    public boolean isOverBudget(String systemPrompt, String userInput, int maxTokens) {
+        return isOverBudget(systemPrompt, userInput, null, maxTokens);
     }
 
     /** 按预算选层并扣减 */

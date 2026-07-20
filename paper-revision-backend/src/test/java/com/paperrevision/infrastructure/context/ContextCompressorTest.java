@@ -34,9 +34,9 @@ class ContextCompressorTest {
 
     @Test
     void shouldFallbackToKeywordsWhenSummarizerNull() {
-        CompressedContext ctx = compressor.compressLocally("向量检索 向量检索 关键词提取 关键词提取 关键词提取");
+        CompressedContext ctx = compressor.compressLocally("向量检索 向量检索 关键词 关键词 关键词");
         assertTrue(ctx.summary.startsWith("关键词："), "无 LLM 时应用关键词兜底, got: " + ctx.summary);
-        assertTrue(ctx.keywords.contains("关键词提取"));
+        assertTrue(ctx.keywords.contains("关键词"), "高频词应出现在关键词列表");
     }
 
     @Test
